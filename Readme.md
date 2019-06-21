@@ -7,6 +7,9 @@
 * [Index.cshtml](./CS/Views/Home/Index.cshtml)
 <!-- default file list end -->
 # GridView - How to implement select/unselect for all rows in a group row
+<!-- run online -->
+**[[Run Online]](https://codecentral.devexpress.com/t362032)**
+<!-- run online end -->
 
 
 This as an MVC version of the <a href="https://www.devexpress.com/Support/Center/p/E1760">E1760 - ASPxGridView - How to implement select/unselect for all rows in a group row</a> code example.
