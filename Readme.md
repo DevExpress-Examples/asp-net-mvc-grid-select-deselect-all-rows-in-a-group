@@ -8,7 +8,7 @@
 <!-- default file list end -->
 # GridView - How to implement select/unselect for all rows in a group row
 <!-- run online -->
-**[[Run Online]](https://codecentral.devexpress.com/t362032)**
+**[[Run Online]](https://codecentral.devexpress.com/t362032/)**
 <!-- run online end -->
 
 
