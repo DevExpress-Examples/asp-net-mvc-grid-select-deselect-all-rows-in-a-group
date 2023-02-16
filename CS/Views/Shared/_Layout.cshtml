@@ -1,17 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GridViewGroupSelectionMvc</title>
+    <title>GridUpdateComboMvc</title>
 
     @Html.DevExpress().GetScripts( 
         new Script { ExtensionSuite = ExtensionSuite.Editors }, 
         new Script { ExtensionSuite = ExtensionSuite.GridView },
-        new Script { ExtensionSuite = ExtensionSuite.NavigationAndLayout })
+        new Script { ExtensionSuite = ExtensionSuite.NavigationAndLayout }
+)
 
     @Html.DevExpress().GetStyleSheets( 
         new StyleSheet { ExtensionSuite = ExtensionSuite.Editors }, 
         new StyleSheet { ExtensionSuite = ExtensionSuite.GridView },
-        new StyleSheet { ExtensionSuite = ExtensionSuite.NavigationAndLayout })
+        new StyleSheet { ExtensionSuite = ExtensionSuite.NavigationAndLayout }
+)
+    @RenderSection("head", required: false)
 </head>
 
 <body>

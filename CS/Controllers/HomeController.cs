@@ -1,18 +1,27 @@
-﻿using System.Web.Mvc;
+﻿using DevExpress.Web.Mvc;
+using Models;
+using System.Web.Mvc;
 
-namespace GridViewGroupSelectionMvc {
-    public class HomeController : Controller {
-        public ActionResult Index() {
+namespace GridUpdateComboMvc
+{
+    public class HomeController : Controller
+    {
+        public ActionResult Index()
+        {
             return View();
         }
 
-        public ActionResult GridViewPartial() {
-            return PartialView(NorthwindDataProvider.GetProducts());
+        [ValidateInput(false)]
+        public ActionResult GridViewPartial()
+        {
+            return PartialView("_GridViewPartial", BatchEditRepository.GridData);
         }
 
-        public ActionResult GridViewCustomActionPartial(string parameters) {
-            ViewData["parameters"] = parameters;
-            return PartialView("GridViewPartial", NorthwindDataProvider.GetProducts());
+        public ActionResult GridViewCustomAction(string parameters)
+        {
+            ViewData["data"] = parameters;
+            return GridViewPartial();
         }
+
     }
 }

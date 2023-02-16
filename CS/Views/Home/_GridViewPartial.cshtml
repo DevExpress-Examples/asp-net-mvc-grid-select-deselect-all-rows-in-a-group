@@ -1,0 +1,349 @@
+@using System.Web.UI.WebControls
+@functions {
+    protected bool GetChecked(GridViewGroupRowTemplateContainer container)
+    {
+        var grid = (MVCxGridView)container.Grid;
+        var groupRowKey = GetGroupRowKey(grid, container.VisibleIndex);
+
+
+
+        var groupKeysCache = GetGroupKeysCache(grid);
+
+        var dataRowsKeys = groupKeysCache[groupRowKey];
+        foreach (var dataRowKey in dataRowsKeys)
+        {
+            if (!grid.Selection.IsRowSelectedByKey(dataRowKey))
+                return false;
+        }
+        return true;
+
+    }
+
+    protected CheckState GetCheckState(GridViewGroupRowTemplateContainer container)
+    {
+        var grid = (MVCxGridView)container.Grid;
+        var groupRowKey = GetGroupRowKey(grid, container.VisibleIndex);
+
+
+
+        var groupKeysCache = GetGroupKeysCache(grid);
+
+        var dataRowsKeys = groupKeysCache[groupRowKey];
+        var selectedCount = dataRowsKeys.Count(key => grid.Selection.IsRowSelectedByKey(key));
+
+        if (selectedCount == 0)
+            return CheckState.Unchecked;
+        if (dataRowsKeys.Count == selectedCount)
+            return CheckState.Checked;
+        return CheckState.Indeterminate;
+
+    }
+
+    protected string GetCaptionText(GridViewGroupRowTemplateContainer container)
+    {
+        string captionText = !string.IsNullOrEmpty(container.Column.Caption) ? container.Column.Caption : container.Column.FieldName;
+        return string.Format("{0} : {1} {2}", captionText, container.GroupText, container.SummaryText);
+    }
+
+
+    protected Dictionary<string, List<object>> GetGroupKeysCache(MVCxGridView grid)
+    {
+        var cacheSessionKey = "GroupKeysCache-Key";
+        var invalidateCacheSessionKey = "GroupKeysCacheInvalidate-Key";
+
+        var currentInvalidateKey = string.Join(";", grid.GetGroupedColumns().Select(i => i.FieldName));
+        var cacheInvalidateKey = (string)HttpContext.Current.Session[invalidateCacheSessionKey];
+
+        if (currentInvalidateKey != cacheInvalidateKey)
+        {
+            HttpContext.Current.Session[cacheSessionKey] = CreateCurrentGroupKeysCache(grid);
+        }
+
+        return (Dictionary<string, List<object>>)HttpContext.Current.Session[cacheSessionKey];
+    }
+
+    Dictionary<string, List<object>> CreateCurrentGroupKeysCache(MVCxGridView grid)
+    {
+        var groupedColumns = grid.GetGroupedColumns();
+        if (groupedColumns.Count == 0)
+            return null;
+
+        // save group rows expand state
+        var expandedGroups = new List<GroupRowInfoKey>();
+        for (int visibleIndex = 0; visibleIndex < grid.VisibleRowCount; visibleIndex++)
+        {
+            if (grid.IsGroupRow(visibleIndex) && grid.IsRowExpanded(visibleIndex))
+            {
+                var level = grid.GetRowLevel(visibleIndex);
+                var columns = groupedColumns.Take(level + 1).ToList();
+                var groupInfoKey = new GroupRowInfoKey
+                {
+                    Level = level,
+                    GroupValues = columns.Select(i => grid.GetRowValues(visibleIndex, i.FieldName)).ToList()
+                };
+                expandedGroups.Add(groupInfoKey);
+            }
+        }
+
+        grid.ExpandAll();
+
+        var result = new Dictionary<string, List<object>>();
+        var stack = new Stack<string>();
+        for (int visibleIndex = 0; visibleIndex < grid.VisibleRowCount; visibleIndex++)
+        {
+            if (grid.IsGroupRow(visibleIndex))
+            {
+                var level = grid.GetRowLevel(visibleIndex);
+
+                var prevVisibleIndex = visibleIndex - 1;
+                if (prevVisibleIndex >= 0)
+                {
+                    var prevRowLevel = grid.GetRowLevel(prevVisibleIndex);
+
+                    var levelDiff = prevRowLevel - level;
+                    if (levelDiff > 0)
+                    {
+                        for (int i = 0; i < levelDiff; i++)
+                        {
+                            stack.Pop();
+                        }
+                    }
+                }
+
+                var groupRowKey = GetGroupRowKey(grid, visibleIndex);
+                stack.Push(groupRowKey);
+                result[groupRowKey] = new List<object>();
+
+            }
+            else
+            {
+                var dataRowKey = grid.GetRowValues(visibleIndex, grid.KeyFieldName);
+                foreach (var groupRowKey in stack)
+                {
+                    result[groupRowKey].Add(dataRowKey);
+                }
+            }
+        }
+
+        grid.CollapseAll();
+
+        // restore group rows expand state
+        foreach (var groupRowInfo in expandedGroups.OrderBy(i => i.Level))
+        {
+            var columns = groupedColumns.Take(groupRowInfo.Level + 1).ToList();
+            var visibleIndex = FindGroupRowVisibleIndex(grid, columns, groupRowInfo.GroupValues, groupRowInfo.Level);
+            grid.ExpandRow(visibleIndex);
+        }
+
+        return result;
+    }
+
+    string GetGroupRowKey(MVCxGridView grid, int visibleIndex)
+    {
+        var level = grid.GetRowLevel(visibleIndex);
+        var columns = grid.GetGroupedColumns().Take(level + 1).ToList();
+
+        var groupValues = columns.Select(i => grid.GetRowValues(visibleIndex, i.FieldName)).ToList();
+        return string.Join(";", groupValues);
+    }
+
+    int FindGroupRowVisibleIndex(MVCxGridView grid, List<GridViewDataColumn> columns, List<object> expectedGroupValues, int level)
+    {
+        for (int visibleIndex = 0; visibleIndex < grid.VisibleRowCount; visibleIndex++)
+        {
+            if (grid.IsGroupRow(visibleIndex) && grid.GetRowLevel(visibleIndex) == level)
+            {
+                var groupValues = columns.Select(i => grid.GetRowValues(visibleIndex, i.FieldName)).ToList();
+                if (CompareGroupValues(expectedGroupValues, groupValues))
+                    return visibleIndex;
+            }
+        }
+        throw new Exception("Can't find group row by values");
+        //return -1;
+    }
+
+    bool CompareGroupValues(List<object> values1, List<object> values2)
+    {
+        if (values1.Count != values2.Count)
+            return false;
+        for (int i = 0; i < values1.Count; i++)
+        {
+            if (!object.Equals(values1[i], values2[i]))
+                return false;
+        }
+        return true;
+    }
+
+    class GroupRowInfoKey
+    {
+        public int Level { get; set; }
+        public List<object> GroupValues { get; set; }
+    }
+}
+@{
+    var grid = Html.DevExpress().GridView(settings =>
+    {
+        settings.Name = "GridView";
+        settings.CallbackRouteValues = new { Controller = "Home", Action = "GridViewPartial" };
+
+        settings.CustomActionRouteValues = new { Controller = "Home", Action = "GridViewCustomAction" };
+
+        settings.CommandColumn.Visible = true;
+        settings.KeyFieldName = "ProjectID";
+
+        settings.SettingsBehavior.ProcessSelectionChangedOnServer = true;
+        //user's code
+        settings.Settings.HorizontalScrollBarMode = ScrollBarMode.Visible;
+        settings.Settings.VerticalScrollBarMode = ScrollBarMode.Visible;
+        settings.Settings.VerticalScrollableHeight = 700;
+        settings.SettingsPager.FirstPageButton.Visible = true;
+        settings.SettingsPager.Visible = true;
+        settings.SettingsPager.PageSize = 50;
+        settings.Settings.ShowGroupPanel = true;
+        settings.Settings.ShowFilterRow = true;
+        settings.SettingsBehavior.AllowSelectByRowClick = true;  //-----this is used to clickng on any row that record selected without checkbox also---//
+        settings.SettingsPager.LastPageButton.Visible = true;
+        settings.SettingsPager.PageSizeItemSettings.Visible = true;
+        settings.SettingsPager.PageSizeItemSettings.ShowAllItem = true;
+        settings.SettingsPager.PageSizeItemSettings.Items = new string[] { "20", "50", "100", "200", "500" };
+        settings.SettingsCookies.StoreFiltering = false;
+        settings.Settings.ShowGroupedColumns = true;
+        settings.SettingsCookies.StoreColumnsWidth = true;
+        settings.SettingsBehavior.AllowEllipsisInText = false; //---this is used for fixed row size--//
+        settings.SettingsCookies.StoreGroupingAndSorting = false;
+        //----------------------------------//
+
+        //------this is for Header Checkbox and Filters and Sorting setting inside grid actions---//
+        settings.CommandColumn.Visible = true; //------this is only used to show the header check box or any action column-----//
+        settings.CommandColumn.ShowSelectCheckbox = true;
+        settings.CommandColumn.ShowClearFilterButton = true;
+        settings.CommandColumn.SelectAllCheckboxMode = GridViewSelectAllCheckBoxMode.Page;
+        //----------------------------------//
+
+        //------this is for grid height and withd property in grid actions---//
+        settings.Width = System.Web.UI.WebControls.Unit.Percentage(100);
+        settings.Height = System.Web.UI.WebControls.Unit.Percentage(100);
+        settings.EnablePagingGestures = AutoBoolean.False;
+        //----------------------------------//
+
+        settings.SettingsAdaptivity.AdaptivityMode = GridViewAdaptivityMode.Off;
+        settings.SettingsAdaptivity.AdaptiveColumnPosition = GridViewAdaptiveColumnPosition.Right;
+        settings.SettingsAdaptivity.AdaptiveDetailColumnCount = 1;
+        settings.SettingsAdaptivity.AllowOnlyOneAdaptiveDetailExpanded = false;
+        settings.SettingsAdaptivity.HideDataCellsAtWindowInnerWidth = 0;
+
+        settings.SettingsBehavior.EnableCustomizationWindow = true;
+        settings.SettingsContextMenu.Enabled = false;
+        settings.SettingsCookies.Enabled = false;
+
+
+
+
+        //
+
+        settings.Columns.Add(c =>
+        {
+            c.FieldName = "ProjectID";
+            c.Caption = "Project";
+        });
+
+        settings.Columns.Add(c =>
+        {
+            c.FieldName = "ProjectGroup";
+            c.Caption = "Project Group";
+        });
+        settings.Columns.Add(c =>
+        {
+            c.FieldName = "ProjectCategory";
+            c.Caption = "Project Category";
+        });
+
+        settings.SetGroupRowContentTemplateContent(c =>
+        {
+            ViewContext.Writer.Write("<table><tr><td>");
+            Html.DevExpress().CheckBox(checkBox =>
+            {
+                checkBox.Name = "checkBox" + c.VisibleIndex.ToString();
+                checkBox.Properties.ClientSideEvents.CheckedChanged = string.Format("function(s, e){{ {0}.PerformCallback({{parameters: '{1};' + s.GetCheckState()}}); }}", settings.Name, c.VisibleIndex);
+                checkBox.Init += (s, e) => {
+                    var checkEditor = (MVCxCheckBox)s;
+
+                    var checkState = GetCheckState(c);
+                    checkEditor.AllowGrayed = true;
+
+                    checkEditor.CheckState = GetCheckState(c);
+                };
+            }).GetHtml();
+            ViewContext.Writer.Write("</td><td>");
+            Html.DevExpress().Label(label =>
+            {
+                label.Name = "label" + c.VisibleIndex.ToString();
+                label.Text = GetCaptionText(c);
+            }).GetHtml();
+            ViewContext.Writer.Write("</td></tr></table>");
+        });
+
+
+        settings.BeforeGetCallbackResult += (sender, e) =>
+        {
+            MVCxGridView gridView = (MVCxGridView)sender;
+            if (Session["Grouped"] != null && Session["Grouped"].ToString() == "clear")
+            {
+                if (ViewBag.ClearGrouping == true)
+                {
+                    foreach (var columns in gridView.DataColumns)
+                    {
+                        columns.UnGroup();
+                    }
+                    Session["Grouped"] = "";
+                }
+
+                return;
+            }
+
+            if (ViewData["data"] != null)
+            {
+
+                string[] parameters = ViewData["data"].ToString().Split(';');
+                int visibleIndex = int.Parse(parameters[0]);
+                bool isGroupRowSelected = false;
+                CheckState currentState = (CheckState)Enum.Parse(typeof(CheckState), parameters[1]);
+                switch (currentState)
+                {
+                    case CheckState.Indeterminate:
+                    case CheckState.Checked:
+                        isGroupRowSelected = true;
+                        break;
+                    case CheckState.Unchecked:
+                        isGroupRowSelected = false;
+                        break;
+                }
+
+
+
+                var groupRowKey = GetGroupRowKey(gridView, visibleIndex);
+                var groupKeysCache = GetGroupKeysCache(gridView);
+                var dataRowsKeys = groupKeysCache[groupRowKey];
+
+                foreach (var dataRowKey in dataRowsKeys)
+                {
+                    gridView.Selection.SetSelectionByKey(dataRowKey, isGroupRowSelected);
+                }
+
+            }
+            if (ViewBag.GroupedColumns == null)
+                return;
+            string[] columnNames = ViewBag.GroupedColumns.Split(';');
+            gridView.ClearSort();
+            foreach (string name in columnNames)
+            {
+                gridView.GroupBy(gridView.Columns[name]);
+            }
+            Session["Grouped"] = "";
+            gridView.CollapseAll();
+        };
+
+    });
+
+}
+@grid.Bind(Model).GetHtml()
