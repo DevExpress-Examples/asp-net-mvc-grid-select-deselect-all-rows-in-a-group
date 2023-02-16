@@ -7,7 +7,6 @@
 *Files to look at*:
 
 * [HomeController.cs](./CS/Controllers/HomeController.cs)
-* [NorthwindDataProvider.cs](./CS/Models/NorthwindDataProvider.cs)
 * **[GridViewPartial.cshtml](./CS/Views/Home/GridViewPartial.cshtml)**
 * [Index.cshtml](./CS/Views/Home/Index.cshtml)
 <!-- default file list end -->
