@@ -7,7 +7,7 @@
 *Files to look at*:
 
 * [HomeController.cs](./CS/Controllers/HomeController.cs)
-* **[GridViewPartial.cshtml](./CS/Views/Home/GridViewPartial.cshtml)**
+* **[_GridViewPartial.cshtml](./CS/Views/Home/_GridViewPartial.cshtml)**
 * [Index.cshtml](./CS/Views/Home/Index.cshtml)
 <!-- default file list end -->
 # GridView - How to implement select/unselect for all rows in a group row
