@@ -15,9 +15,8 @@
 **[[Run Online]](https://codecentral.devexpress.com/t362032/)**
 <!-- run online end -->
 
+This example demonstrates how to allow users to add/remove all rows in a group to/from selection.
 
-This as an MVC version of the <a href="https://www.devexpress.com/Support/Center/p/E1760">E1760 - ASPxGridView - How to implement select/unselect for all rows in a group row</a> code example.
+See Also:
 
-<br/>
-
-
+<a href="https://www.devexpress.com/Support/Center/p/E1760">E1760 - ASPxGridView - How to implement select/unselect for all rows in a group row</a>
