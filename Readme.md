@@ -34,7 +34,7 @@ protected string GetCaptionText(GridViewGroupRowTemplateContainer container) {
 
 Set the check box's [CheckedChanged](https://docs.devexpress.com/AspNet/DevExpress.Web.CheckEditClientSideEvents.CheckedChanged) event to a function that sends the visible index of the group row and the check state of the check box as callback parameters to the server.
 
-```aspx
+```cshtml
 Html.DevExpress().CheckBox(checkBox => {
     checkBox.Name = "checkBox" + c.VisibleIndex.ToString();
     checkBox.Properties.ClientSideEvents.CheckedChanged = string.Format("function(s, e){{ {0}.PerformCallback({{parameters: '{1};' + s.GetCheckState()}}); }}", settings.Name, c.VisibleIndex);
