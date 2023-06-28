@@ -1,6 +1,6 @@
 # Grid View for ASP.NET MVC - How to select/deselect all rows in a group when data is grouped by one column
 <!-- run online -->
-**[[Run Online]](https://codecentral.devexpress.com/t362032/)**
+**[[Run Online]](https://codecentral.devexpress.com/128550402/)**
 <!-- run online end -->
 
 This example demonstrates how to allow users to add/remove all rows in a group to/from selection. Note that this technique works only when grid data is grouped by one column.
