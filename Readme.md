@@ -12,7 +12,7 @@ This example demonstrates how to allow users to add/remove all rows in a group t
 
 ## Overview
 
-Call the grid's [SetGroupRowContentTemplateContent]([https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.MVCxGridViewProperties.SetGroupRowContentTemplateContent.overloads](https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.GridViewSettings.SetGroupRowContentTemplateContent.overloads)) method and place a check box and a label to the group row content template. Implement two-way data binding between the label's `Text` property and group row markup.
+Call the grid's [SetGroupRowContentTemplateContent](https://docs.devexpress.com/AspNetMvc/DevExpress.Web.Mvc.GridViewSettings.SetGroupRowContentTemplateContent.overloads) method and place a check box and a label to the group row content template. Implement two-way data binding between the label's `Text` property and group row markup.
 
 ```cshtml
 settings.SetGroupRowContentTemplateContent(c => {
