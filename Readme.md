@@ -129,7 +129,7 @@ settings.BeforeGetCallbackResult += (sender, e) => {
 
 * [Grid View for ASP.NET Web Forms - How to select/deselect all rows in a group when data is grouped by one column](https://github.com/DevExpress-Examples/asp-net-web-forms-gridview-select-deselect-all-rows-in-a-group)
 <!-- feedback -->
-## Does this example address your development requirements/objectives?
+## Does This Example Address Your Development Requirements/Objectives?
 
 [<img src="https://www.devexpress.com/support/examples/i/yes-button.svg"/>](https://www.devexpress.com/support/examples/survey.xml?utm_source=github&utm_campaign=asp-net-mvc-grid-select-deselect-all-rows-in-a-group&~~~was_helpful=yes) [<img src="https://www.devexpress.com/support/examples/i/no-button.svg"/>](https://www.devexpress.com/support/examples/survey.xml?utm_source=github&utm_campaign=asp-net-mvc-grid-select-deselect-all-rows-in-a-group&~~~was_helpful=no)
 
